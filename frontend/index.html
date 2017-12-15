@@ -1,0 +1,171 @@
+<html>
+    <head>
+        <title>AWS Image Uploads Without EC2</title>
+        <!-- Latest jQuery -->
+        <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css"> 
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+        <!-- CSS specific to this page -->
+        <link rel="stylesheet" href="css/amazon-image-upload-test.css"> 
+<style>
+@media screen and (min-width: 1000px)
+{
+.container{
+width:600px !important;
+}
+}
+</style
+
+        <!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <!-- The jQuery UI widget factory, can be omitted if jQuery UI is already included -->
+		<script src="js/vendor/jquery.ui.widget.js"></script>
+        <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+		<script src="js/vendor/jquery.iframe-transport.js"></script>
+        <!-- The basic File Upload plugin -->
+       <script src="js/vendor/jquery.fileupload.js"></script>
+        <!-- The main JS for bringing it all together on this page -->
+        <script src="js/main.js"></script>
+		<!-- This Get Lable button click event--->
+		<script type="text/javascript" language="javascript">
+		function processImage(action){
+			var URL = "https://1pwsxns0o2.execute-api.us-east-1.amazonaws.com/dev/getlabels";  
+			var xmlhttp = new XMLHttpRequest();	
+			var params1 = "{\"Bucket\":\"";	
+			var params2 = "reko-image-dump"	;
+			var fname = document.getElementById("output-url").value;
+			var params3 = "\", \"file\":\"" + fname +"\",";
+			var params4 = "\"label\":\""+action+ "\"}" ;
+			var params = params1.concat(params2)+params3+params4;
+			xmlhttp.open("POST", URL, false);
+			console.log('1 OPENED', xmlhttp.statusText);
+			xmlhttp.send(params);  
+			handleResponse(action,xmlhttp.responseText);
+			}
+	/*	function getText(action){
+			var URL = "https://1pwsxns0o2.execute-api.us-east-1.amazonaws.com/dev/getlabels";  
+			var xmlhttp = new XMLHttpRequest();	
+			var params1 = "{\"Bucket\":\"";	
+			var params2 = "reko-image-dump"	;
+			var fname = document.getElementById("output-url").value;
+			var params3 = "\", \"file\":\"" + fname +"\",";
+			var params4 = "\"label\":\""+action+ "\"}" ;
+			var params = params1.concat(params2)+params3+params4;
+			xmlhttp.open("POST", URL, false);
+			console.log('1 OPENED', xmlhttp.statusText);
+			xmlhttp.send(params);  
+			handleResponse(action,xmlhttp.responseText);
+		}*/
+		function handleResponse(act,responseText){
+		  if(act=="getLabels"){
+				var resp = JSON.parse(responseText);    
+				var respbody = JSON.parse(resp.body);
+				alert("respbody-->" +respbody);
+				var names="";
+				for (var i = 0; i < respbody.Labels.length; i++) {
+					if (i< respbody.Labels.length-1){
+						names += respbody.Labels[i].Name + "("+ respbody.Labels[i].Confidence.toFixed(2) + ")-->";
+					}else{
+						names += respbody.Labels[i].Name + "("+respbody.Labels[i].Confidence.toFixed(2) + ")"  ;
+					}
+				}
+				document.getElementById("txt_result").value = names;
+			} else if(act=="getText"){
+				var resp = JSON.parse(responseText);
+				var respbody = JSON.parse(resp.body);
+				//alert("resTextDetections->"+respbody.TextDetections[0].DetectedText);
+				var texts="";
+				for(i=0;i<respbody.TextDetections.length;i++){
+				   if(i<respbody.TextDetections.length-1){
+						texts += respbody.TextDetections[i].DetectedText + "-->";
+					} else { 
+						texts += respbody.TextDetections[i].DetectedText;
+					}
+				}							
+				alert("resptext-->" +texts);
+				document.getElementById("txt_result").value = texts;			
+			}else if(act="recognizeCelebrities"){
+				var resp = JSON.parse(responseText);
+				var respbody = JSON.parse(resp.body);
+				//alert("resTextDetections->"+respbody.TextDetections[0].DetectedText);
+				var celbName="";
+				for(i=0;i<respbody.CelebrityFaces.length;i++){
+				   if(i<respbody.CelebrityFaces.length-1){
+						celbName += respbody.CelebrityFaces[i].Name + "-->";
+					} else { 
+						celbName += respbody.CelebrityFaces[i].Name;
+					}
+				}							
+				alert("resptext-->" +celbName);
+				document.getElementById("txt_result").value = celbName;			
+			}
+		}
+		function getClear(){
+		document.getElementById("output img").replaceWith('<img src="' + data.resultUrl + '" class="preview"/>');
+		document.getElementById("lbl_result").value = "";
+		document.getElementById("txt_result").value = "";
+		}
+		</script>
+		
+    </head>    
+	<body style="background-color:powderblue">
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+            <div class="navbar-header"><h3>Serverless AWS AI features -demo</h3></div>
+           </div>
+    </nav>
+	<br/>
+	<br/>
+	<br/>
+	<br/>
+		<div > 
+           <div class="container ">
+                <div id="output" class="left-block"> 
+                  <span id="output-helper"></span> 
+                    <img src="http://placehold.it/300x300"   style="text-align:center;" class="img-circle"/>			
+				</div>
+				<div id="lbl_result">
+					<h1 aligin="center">Image Upload</h1>
+				</div>
+			</div> 		
+			<div class="container">
+			<form id="file-form" method="PUT">
+				<table>
+					<tr colspan=5>
+					<td>
+					<span class="fileinput-button btn btn-success ">
+						<span>Upload Image</span>
+						<input type="file" id="file-select" name="photos[]"/>
+					</span>
+					</td><td>
+						<span class="fileinput-button btn btn-success "  onclick="processImage('getLabels')">
+						<span>Get Labels</span>
+						</span>
+					</td><td>
+						<span class="fileinput-button btn btn-success "  onclick="processImage('recognizeCelebrities')">
+						<span>Get Details</span>
+						</span>
+					</td><td>
+						<span class="fileinput-button btn btn-success "  onclick="processImage('getText')">
+						<span>Get Text</span>
+						</span>
+					</td><td>
+						<span class="fileinput-button btn btn-success "  onclick="getClear()">
+						<span>Clear Screen</span>
+						</span>
+					</td>					
+					</tr>	
+				</table>		
+			</form>
+				<div id="progress">
+					<div class="bar progress-bar" style="width: 0%;"></div>
+				</div> 
+				<input type="hidden" id="output-url" /> 
+				<input type="text" name="txt_result" id="txt_result" class="form-control"/>
+			</div>
+			
+		</div>
+    </body>
+</head>
